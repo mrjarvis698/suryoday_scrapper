@@ -1,36 +1,53 @@
-import csv
 import os
+import logging
+from logging.handlers import TimedRotatingFileHandler
 from datetime import datetime
+from dotenv import load_dotenv
 
-LOG_FOLDER = "logs"
-DEBUG_HEADERS = ["timestamp", "level", "event"]
+load_dotenv()
 
-os.makedirs(LOG_FOLDER, exist_ok=True)
+LOG_DIR = "logs"
+os.makedirs(LOG_DIR, exist_ok=True)
 
-def get_log_filename():
-    today_date = datetime.now().strftime("%Y-%m-%d")
-    return os.path.join(LOG_FOLDER, f"debug_log_{today_date}.csv")
+LOG_FILE_PATH = os.path.join(LOG_DIR, "debug.csv")
 
-last_log_date = None
+# Define CSV log format
+class CSVFormatter(logging.Formatter):
+    def format(self, record):
+        log_time = datetime.fromtimestamp(record.created)
+        date = log_time.strftime("%Y-%m-%d")
+        time = log_time.strftime("%H:%M:%S")
+        level = record.levelname
+        message = record.getMessage().replace("\n", " ").replace(",", ";")  # Avoid breaking CSV
+        return f"{date},{time},{level},{message}"
 
-def init_debug_log():
-    global last_log_date
-    current_log_date = datetime.now().strftime("%Y-%m-%d")
-    if current_log_date != last_log_date:
-        last_log_date = current_log_date
-        log_file = get_log_filename()
-        if not os.path.exists(log_file):
-            with open(log_file, mode='w', newline='', encoding='utf-8') as file:
-                writer = csv.DictWriter(file, fieldnames=DEBUG_HEADERS)
-                writer.writeheader()
+# Setup logger
+logger = logging.getLogger("playwright_script_logger")
+logger.setLevel(logging.DEBUG)
 
-def log_debug(message: str, level: str = "INFO"):
-    init_debug_log()
-    log_file = get_log_filename()
-    with open(log_file, mode='a', newline='', encoding='utf-8') as file:
-        writer = csv.DictWriter(file, fieldnames=DEBUG_HEADERS)
-        writer.writerow({
-            "timestamp": datetime.now().isoformat(),
-            "level": level.upper(),
-            "event": message
-        })
+if not logger.handlers:
+    handler = TimedRotatingFileHandler(
+        LOG_FILE_PATH,
+        when="midnight",
+        interval=1,
+        backupCount=7,
+        encoding='utf-8'
+    )
+    handler.setFormatter(CSVFormatter())
+    handler.suffix = "%Y-%m-%d"
+    logger.addHandler(handler)
+
+# Ensure headers are present
+if not os.path.isfile(LOG_FILE_PATH) or os.stat(LOG_FILE_PATH).st_size == 0:
+    with open(LOG_FILE_PATH, "w", encoding="utf-8") as f:
+        f.write("Date,Time,Error Level,Logs\n")
+
+def log_debug(message, level="INFO"):
+    if level == "DEBUG":
+        logger.debug(message)
+    elif level == "WARNING":
+        logger.warning(message)
+    elif level == "ERROR":
+        logger.error(message)
+    else:
+        logger.info(message)
