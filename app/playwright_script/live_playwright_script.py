@@ -83,8 +83,11 @@ async def scrape_loop(page):
         try:
             log_debug("Running data scraping cycle...")
 
+            # Example: Scrape account balance
             element = await page.query_selector("div.account-balance")
             balance = await element.inner_text() if element else "N/A"
+
+            # Update the data store with the scraped data
             data_store.update_data({"balance": balance})
 
             log_debug(f"Fetched balance successfully: {balance}")
@@ -101,6 +104,8 @@ async def keep_scraping():
                 browser = await p.chromium.launch(headless=False)
                 context = await browser.new_context()
                 page = await login_and_get_page(context)
+
+                # Start the scraping loop
                 await scrape_loop(page)
 
         except Exception as e:
