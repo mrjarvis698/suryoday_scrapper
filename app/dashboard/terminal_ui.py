@@ -30,9 +30,8 @@ def generate_header():
 
 def generate_user_inputs():
     """Generate a table for user inputs."""
-    table = Table(title="User Inputs", expand=True)
-    table.add_column("Key", style="bold cyan")
-    table.add_column("Value", style="bold magenta")
+    table = Table(title="Mini Statement", expand=True)
+    table.add_column("Statement", style="bold magenta")
     data = data_store.get_data()  # Assuming user inputs are stored in the data store
     for k, v in data.items():
         table.add_row(k, str(v))
@@ -50,7 +49,6 @@ def generate_layout():
     layout.split_column(
         Layout(name="header", size=3),
         Layout(name="body"),
-        Layout(name="footer", size=10),
     )
     layout["body"].split_row(
         Layout(name="debug_logs"),
