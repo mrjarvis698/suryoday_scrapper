@@ -236,7 +236,8 @@ def scrape_loop(page):
             time.sleep(REFRESH_INTERVAL)
 
         except Exception as e:
-            log_debug(f"Error during scraping loop: {str(e)}", level="ERROR")
+            log_debug(f"Error during scraping loop, will restart login: {str(e)}", level="ERROR")
+            raise  # Important: re-raise the error to trigger a fresh login
 
 def keep_scraping():
     while True:
