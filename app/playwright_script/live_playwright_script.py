@@ -241,6 +241,11 @@ def scrape_loop(page):
 
         except Exception as e:
             log_debug(f"Error during scraping loop, will restart login: {str(e)}", level="ERROR")
+            # Capture a screenshot of the failed login attempt
+            timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            screenshot_path = f"logs/login_fail_loop_attempt_{timestamp}.png"
+            page.screenshot(path=screenshot_path)
+            log_debug(f"Captured screenshot: {screenshot_path}")
             raise  # Important: re-raise the error to trigger a fresh login
 
 def keep_scraping():
@@ -257,4 +262,5 @@ def keep_scraping():
 
         except Exception as e:
             log_debug(f"Critical error in keep_scraping loop: {str(e)}", level="ERROR")
+            
             time.sleep(5)
