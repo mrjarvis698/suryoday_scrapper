@@ -12,6 +12,9 @@ import json
 MAX_RETRIES = 5
 BASE_BACKOFF = 1  # seconds
 
+# Shared data to expose to the API
+json_formatted_str = None
+
 def get_otp_via_gui():
     # Create the main window (root)
     root = tk.Tk()
@@ -178,6 +181,7 @@ def login_and_get_page(context):
 
 def scrape_loop(page):
     while True:
+        global json_formatted_str
         try:
             log_debug("Running statement cycle...")
             account_id= page.locator("iframe[name=\"icanvas\"]").content_frame.locator("#accountId > optgroup > option").get_attribute('value')
@@ -228,7 +232,7 @@ def scrape_loop(page):
                 return response;
             }})()
             """
-            json_formatted_str = json.dumps(page.evaluate(js_code), indent=2)
+            json_formatted_str = json.dumps(page.evaluate(js_code))
             # Update the data store with the scraped data
             data_store.update_data({"balance": json_formatted_str})
 
@@ -244,7 +248,7 @@ def keep_scraping():
         try:
             log_debug("Launching browser and initializing scraping loop...")
             with sync_playwright() as p:
-                browser = p.chromium.launch(headless=False)
+                browser = p.chromium.launch(headless=True)
                 context = browser.new_context()
                 page = login_and_get_page(context)
 

@@ -60,8 +60,12 @@ def generate_layout():
     return layout
 
 def run_dashboard():
-    """Run the live dashboard."""
-    with Live(generate_layout(), refresh_per_second=2) as live:
+    """Run the live dashboard with reduced flickering."""
+    layout = generate_layout()  # Create layout once
+    with Live(layout, refresh_per_second=2, screen=True):  # screen=True helps with reducing flicker
         while True:
+            # Only update the changing parts
+            layout["header"].update(generate_header())
+            layout["user_inputs"].update(generate_user_inputs())
+            layout["debug_logs"].update(generate_debug_logs())
             time.sleep(1)
-            live.update(generate_layout())
